@@ -96,19 +96,82 @@ RSpec.describe ItemsController, type: :controller do
       expect(response).to have_http_status(204)
     end
   end
-
+     
   describe "PUT #update_quality" do
     before { put :update_quality }
+    context "with Aged Brie" do
+      let(:items) { [Item.new("Aged Brie", 10, 25)] }
 
-    it 'updates the quality of all items' do
-      items.each(&:reload)
-      items.each do |item|
-        expect(item.sell_in).to eq(9) # Initial sell_in is 10
+      it "increases quality by 1 when sell_in is above 0" do
+        gilded_rose.update_quality
+        expect(items[0].quality).to eq 26
+        expect(items[0].sell_in).to eq 9
+      end
+
+      it "increases quality by 2 when sell_in is 0 or less" do
+        items[0].sell_in = 0
+        gilded_rose.update_quality
+        expect(items[0].quality).to eq 27
+        expect(items[0].sell_in).to eq -1
       end
     end
 
-    it 'returns status code 204' do
-      expect(response).to have_http_status(204)
+    context "with Backstage passes to a TAFKAL80ETC concert" do
+      let(:items) { [Item.new("Backstage passes to a TAFKAL80ETC concert", 15, 20)] }
+
+      it "increases quality by 1 when sell_in is more than 10" do
+        gilded_rose.update_quality
+        expect(items[0].quality).to eq 21
+        expect(items[0].sell_in).to eq 14
+      end
+
+      it "increases quality by 2 when sell_in is 10 or less but more than 5" do
+        items[0].sell_in = 10
+        gilded_rose.update_quality
+        expect(items[0].quality).to eq 22
+        expect(items[0].sell_in).to eq 9
+      end
+
+      it "increases quality by 3 when sell_in is 5 or less but more than 0" do
+        items[0].sell_in = 5
+        gilded_rose.update_quality
+        expect(items[0].quality).to eq 23
+        expect(items[0].sell_in).to eq 4
+      end
+
+      it "sets quality to 0 when sell_in is 0 or less" do
+        items[0].sell_in = 0
+        gilded_rose.update_quality
+        expect(items[0].quality).to eq 0
+        expect(items[0].sell_in).to eq -1
+      end
+    end
+
+    context "with Sulfuras, Hand of Ragnaros" do
+      let(:items) { [Item.new("Sulfuras, Hand of Ragnaros", 10, 80)] }
+
+      it "does not change quality or sell_in" do
+        gilded_rose.update_quality
+        expect(items[0].quality).to eq 80
+        expect(items[0].sell_in).to eq 10
+      end
+    end
+
+    context "with regular items" do
+      let(:items) { [Item.new("Regular Item", 10, 20)] }
+
+      it "decreases quality by 1 when sell_in is above 0" do
+        gilded_rose.update_quality
+        expect(items[0].quality).to eq 19
+        expect(items[0].sell_in).to eq 9
+      end
+
+      it "decreases quality by 2 when sell_in is 0 or less" do
+        items[0].sell_in = 0
+        gilded_rose.update_quality
+        expect(items[0].quality).to eq 18
+        expect(items[0].sell_in).to eq -1
+      end
     end
   end
 end
